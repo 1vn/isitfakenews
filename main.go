@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -59,6 +60,11 @@ func initWordBank() {
 		WordBank[words[0]] = mat.NewVector(51, floatArray)
 	}
 
+}
+
+func sigmoid(in float64) float64 {
+	val := 1 / (1 + math.Exp(-in))
+	return val
 }
 
 func initModel() {
@@ -135,7 +141,6 @@ func vectorizeStory(story string) *mat.Vector {
 
 func inferNews(url string) bool {
 	story := getStory(url)
-
 	var storyVec *mat.Vector
 	if vec, ok := linkCache[url]; ok {
 		storyVec = vec
@@ -144,10 +149,17 @@ func inferNews(url string) bool {
 		linkCache[url] = storyVec
 	}
 
-	return false
+	total := float64(0)
+	for idx, val := range modelVec.RawVector().Data {
+		total += val + storyVec.RawVector().Data[idx]
+	}
+
+	total += -3.5926054
+
+	return sigmoid(total) > 0.5
 }
 
-func InferNewsHandler(w http.ResponseWriter, r *http.Request) {
+func Infer(w http.ResponseWriter, r *http.Request) {
 	responseMap := make(map[string]interface{})
 	urlStr := r.FormValue("url")
 
@@ -174,6 +186,17 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, r, "index.html", nil)
 }
 
+func Correct(w http.ResponseWriter, r *http.Request) {
+	correctStr := r.PostFormValue("correct")
+	correct, err := strconv.ParseBool(correctStr)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(correct)
+}
+
 func init() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	initTmpl()
@@ -185,7 +208,8 @@ func init() {
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", Index)
-	r.HandleFunc("/infer", InferNewsHandler)
+	r.HandleFunc("/infer", Infer)
+	r.HandleFunc("/correct", Correct)
 
 	s := http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets/")))
 	r.PathPrefix("/assets/").Handler(s)

@@ -1,18 +1,31 @@
 console.log("yolo")
 $("#url").on("keyup", function(){
     var url = $("#url").val()
-    $.get("http://localhost:5555/infer", {"url": url}).done(function(data){
+    $("#result").attr("class", "alert alert-warning")
+    $("#result").text("Thinking...")
+    $.get("/infer", {"url": url}).done(function(data){
         var text;
         var cl;
         if(data.result){
             text = "YES"
             cl = "alert alert-danger"
         } else {
-            text = "NO, THIS IS PROBABLY REAL"
+            text = "NO"
             cl = "alert alert-success"
         }
-        $("#result").addClass(cl)
+        $("#result").attr("class", cl)
         $("#result").text(text)
         $("#correct").css({"display": "block"})
     })
+})
+
+$("#yesButton").on("click", function(){
+    $("#correct").css({"display": "none"})
+    $.post("/correct", {"correct": true})
+})
+
+
+$("#noButton").on("click", function(){
+    $("#correct").css({"display": "none"})
+    $.post("/correct", {"correct": false})
 })
