@@ -1,0 +1,43 @@
+body{
+    padding: 30px;
+}
+
+.clear{
+    clear: both;
+}
+
+#main-container{
+    margin: 0 auto;
+    width: 1000px;
+}
+
+#check:hover{
+    cursor:pointer;
+}
+
+#result{
+    font-size: 50px;
+    margin: 30px;
+}
+
+.title-text{
+    float: left;
+}
+
+#url-input{
+    float: left;
+    width: 400px;
+    margin-top: 23px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#url{
+    outline: 0;
+    border: 0;   
+    border-bottom: 2px solid #000;
+}
+
+#correct{
+    display:none;
+}
