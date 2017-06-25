@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"math"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -20,8 +21,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type OnlineVec struct {
+	Vector  *mat.Vector
+	Correct bool
+}
+
 var (
-	templatePaths = []string{
+	UPDATE_SAMPLE_SIZE = 5
+	intercept          = -3.5926054
+	templatePaths      = []string{
 		"index.html",
 	}
 	templates *template.Template
@@ -31,9 +39,12 @@ var (
 		"www.americannews.com", "www.bigamericannews.com", "www.christwire.org", "www.civictribune.com", "www.clickhole.com", "www.creambmp.com", "www.dcgazette.com", "www.dailycurrant.com", "www.dcclothesline.com", "www.derfmagazine.com", "www.drudgereport.com.co", "www.duhprogressive.com", "www.empirenews.com", "www.enduringvision.com", "www.msnbc.co", "www.msnbc.website", "www.mediamass.net", "www.nationalreport.net", "www.newsbiscuit.com", "www.news-hound.com", "www.newsmutiny.com", "www.politicalears.com", "www.private-eye.co.uk", "www.realnewsrightnow.com", "www.rilenews.com", "www.sprotspickle.com", "www.thenewsnerd.com", "www.theuspatriot.com", "www.witscience.org", "www.theonion.com", "www.amplifyingglass.com", "www.duffleblog.com", "www.empiresports.co", "www.gomerblog.com", "www.huzlers.com", "www.itaglive.com", "www.newslo.com", "www.nahadaily.com", "www.rockcitytimes.com", "www.thelapine.ca", "www.thespoof.com", "www.weeklyworldnews.com", "www.worldnewsdailyreport.com", "www.21stcenturywire.com", "www.activistpost.com", "www.beforeitsnews.com", "www.bigpzone.com", "www.chronicle.su", "www.coasttocoastam.com", "www.consciouslifenews.com", "www.conservativeoutfitters.com", "www.countdowntozerotime.com", "www.counterpsyops.com", "www.dailybuzzlive.com", "www.disclose.tv", "www.fprnradio.com", "www.geoengineeringwatch.org", "www.globalresearch.ca", "www.govtslaves.info", "www.gulagbound.com", "www.jonesreport.com", "www.hangthebankers.com", "www.humansarefree.com", "www.infowars.com", "www.intellihub.com", "www.lewrockwell.com", "www.libertytalk.fm", "www.libertyvideos.org", "www.megynkelly.us", "www.naturalnews.com", "www.newswire-24.com", "www.nodisinfo.com", "www.nowtheendbegins.com", "www.pakalertpress.com", "www.politicalblindspot.com", "www.prisonplanet.com", "www.prisonplanet.tv", "www.realfarmacy.com", "www.redflagnews.com", "www.truthfrequencyradio.com", "www.thedailysheeple.com", "www.therundownlive.com", "www.unconfirmedsources.com", "www.veteranstoday.com", "www.wakingupwisconsin.com", "www.worldtruth.tv",
 	}
 
-	model     = []float64{-1.2737482873423125, 0.5142605867357818, 0.03370879411437541, 1.128443861590454, 1.1358368525010816, 0.35720347428853566, -1.1961518743190735, 0.2322227248512921, -0.4210460534911449, -0.03376353450943456, -1.3867871194847803, -0.8787988804117033, -0.8830888463820143, -0.6836304363488519, 0.2373738518714629, -0.6095781790421557, -1.5451400225785885, -1.3579258923320978, 0.08380092445168075, -0.3004120938915199, 1.0112704286991592, 1.610971235757192, -0.5639771214339668, 0.5832278847971472, 1.149164820993785, -1.0852161539572005, 0.9473528032342516, 0.2760889497210596, -0.34378759609904785, -1.2744406378919138, -1.3498792064156049, 0.221988954552692, -0.4693493678622002, -1.0411901706035622, -0.5776024532774324, -1.7042797044375582, -0.14961636750328172, -0.625535064861366, -0.7666057751699099, -0.21154871657483376, 0.046044142838342995, -0.37012732994482095, -0.7387381503691399, -0.1540698344108049, -0.7523041503763994, 0.25642665668049963, 0.10152643899105757, 0.2810367199385284, 1.456686148736361, -0.1313619368253374, -1.2845432190223274}
-	modelVec  *mat.Vector
-	linkCache map[string]*mat.Vector
+	model        = []float64{-1.2737482873423125, 0.5142605867357818, 0.03370879411437541, 1.128443861590454, 1.1358368525010816, 0.35720347428853566, -1.1961518743190735, 0.2322227248512921, -0.4210460534911449, -0.03376353450943456, -1.3867871194847803, -0.8787988804117033, -0.8830888463820143, -0.6836304363488519, 0.2373738518714629, -0.6095781790421557, -1.5451400225785885, -1.3579258923320978, 0.08380092445168075, -0.3004120938915199, 1.0112704286991592, 1.610971235757192, -0.5639771214339668, 0.5832278847971472, 1.149164820993785, -1.0852161539572005, 0.9473528032342516, 0.2760889497210596, -0.34378759609904785, -1.2744406378919138, -1.3498792064156049, 0.221988954552692, -0.4693493678622002, -1.0411901706035622, -0.5776024532774324, -1.7042797044375582, -0.14961636750328172, -0.625535064861366, -0.7666057751699099, -0.21154871657483376, 0.046044142838342995, -0.37012732994482095, -0.7387381503691399, -0.1540698344108049, -0.7523041503763994, 0.25642665668049963, 0.10152643899105757, 0.2810367199385284, 1.456686148736361, -0.1313619368253374, -1.2845432190223274}
+	modelVec     *mat.Vector
+	linkCache    map[string]*mat.Vector
+	correctCache map[string]*OnlineVec
+
+	sampleVectors []*OnlineVec
 )
 
 func initWordBank() {
@@ -149,14 +160,21 @@ func inferNews(url string) bool {
 		linkCache[url] = storyVec
 	}
 
+	sig := predictVector(storyVec)
+	predict := sig > 0.5
+	return predict
+}
+
+func predictVector(vec *mat.Vector) float64 {
 	total := float64(0)
 	for idx, val := range modelVec.RawVector().Data {
-		total += val + storyVec.RawVector().Data[idx]
+		total += val + vec.RawVector().Data[idx]
 	}
 
-	total += -3.5926054
+	total += intercept
 
-	return sigmoid(total) > 0.5
+	sig := sigmoid(total)
+	return sig
 }
 
 func Infer(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +194,10 @@ func Infer(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	responseMap["result"] = inferNews(urlStruct.String())
+	var inference bool
+	inference = inferNews(urlStruct.String())
+
+	responseMap["result"] = inference
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(responseMap)
@@ -187,6 +208,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func Correct(w http.ResponseWriter, r *http.Request) {
+	urlStr := r.PostFormValue("url")
 	correctStr := r.PostFormValue("correct")
 	correct, err := strconv.ParseBool(correctStr)
 	if err != nil {
@@ -194,7 +216,81 @@ func Correct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(correct)
+	if _, ok := linkCache[urlStr]; !ok {
+		return
+	}
+
+	correctVector := &OnlineVec{
+		Vector:  linkCache[urlStr],
+		Correct: correct,
+	}
+
+	correctCache[urlStr] = correctVector
+
+	randomSamples := make([]*OnlineVec, 0)
+	for i := 1; i <= UPDATE_SAMPLE_SIZE; i++ {
+		randIndex := rand.Intn(len(sampleVectors))
+		sampleVec := sampleVectors[randIndex]
+		randomSamples = append(randomSamples, sampleVec)
+	}
+
+	randomSamples = append(randomSamples, correctVector)
+	sampleVectors = append(sampleVectors, correctVector)
+
+	temp := make([]float64, 52)
+	alpha := 0.1
+	for idx, _ := range temp {
+		if idx == 51 {
+			break
+		}
+
+		oldCoeff := model[idx]
+
+		gradSum := float64(0)
+		for _, sample := range randomSamples {
+			pred := predictVector(sample.Vector)
+			label := float64(0)
+			if sample.Correct {
+				label = 1
+			}
+
+			diff := pred - label
+
+			xj := sample.Vector.RawVector().Data[idx]
+
+			diff *= xj
+
+			gradSum += diff
+		}
+
+		temp[idx] = oldCoeff - alpha*gradSum
+	}
+
+	//deal with 52nd feature
+	gradSum := float64(0)
+	for _, sample := range randomSamples {
+		pred := predictVector(sample.Vector)
+		label := float64(0)
+		if sample.Correct {
+			label = 1
+		}
+
+		diff := pred - label
+
+		xj := float64(1)
+
+		diff *= xj
+
+		gradSum += diff
+	}
+
+	temp[51] = intercept - alpha*gradSum
+	for idx, _ := range model {
+		model[idx] = temp[idx]
+	}
+
+	intercept = temp[51]
+
 }
 
 func init() {

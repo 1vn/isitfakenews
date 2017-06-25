@@ -6,7 +6,7 @@ $("#url").on("keyup", function(){
     $.get("/infer", {"url": url}).done(function(data){
         var text;
         var cl;
-        if(data.result){
+        if(!data.result){
             text = "YES"
             cl = "alert alert-danger"
         } else {
@@ -20,12 +20,14 @@ $("#url").on("keyup", function(){
 })
 
 $("#yesButton").on("click", function(){
+    var url = $("#url").val()
     $("#correct").css({"display": "none"})
-    $.post("/correct", {"correct": true})
+    $.post("/correct", {"correct": true, "url": url})
 })
 
 
 $("#noButton").on("click", function(){
+    var url = $("#url").val()
     $("#correct").css({"display": "none"})
-    $.post("/correct", {"correct": false})
+    $.post("/correct", {"correct": false, "url": url})
 })
