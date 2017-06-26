@@ -22,13 +22,13 @@ import (
 )
 
 type OnlineVec struct {
-	Vector  *mat.Vector
-	Correct bool
+	Vector *mat.Vector
+	Fake   bool
 }
 
 var (
 	UPDATE_SAMPLE_SIZE = 5
-	intercept          = -3.5926054
+	intercept          = -1.06837132
 	templatePaths      = []string{
 		"index.html",
 	}
@@ -36,13 +36,14 @@ var (
 	WordBank  map[string]*mat.Vector
 
 	blacklistSet = []string{
-		"www.americannews.com", "www.bigamericannews.com", "www.christwire.org", "www.civictribune.com", "www.clickhole.com", "www.creambmp.com", "www.dcgazette.com", "www.dailycurrant.com", "www.dcclothesline.com", "www.derfmagazine.com", "www.drudgereport.com.co", "www.duhprogressive.com", "www.empirenews.com", "www.enduringvision.com", "www.msnbc.co", "www.msnbc.website", "www.mediamass.net", "www.nationalreport.net", "www.newsbiscuit.com", "www.news-hound.com", "www.newsmutiny.com", "www.politicalears.com", "www.private-eye.co.uk", "www.realnewsrightnow.com", "www.rilenews.com", "www.sprotspickle.com", "www.thenewsnerd.com", "www.theuspatriot.com", "www.witscience.org", "www.theonion.com", "www.amplifyingglass.com", "www.duffleblog.com", "www.empiresports.co", "www.gomerblog.com", "www.huzlers.com", "www.itaglive.com", "www.newslo.com", "www.nahadaily.com", "www.rockcitytimes.com", "www.thelapine.ca", "www.thespoof.com", "www.weeklyworldnews.com", "www.worldnewsdailyreport.com", "www.21stcenturywire.com", "www.activistpost.com", "www.beforeitsnews.com", "www.bigpzone.com", "www.chronicle.su", "www.coasttocoastam.com", "www.consciouslifenews.com", "www.conservativeoutfitters.com", "www.countdowntozerotime.com", "www.counterpsyops.com", "www.dailybuzzlive.com", "www.disclose.tv", "www.fprnradio.com", "www.geoengineeringwatch.org", "www.globalresearch.ca", "www.govtslaves.info", "www.gulagbound.com", "www.jonesreport.com", "www.hangthebankers.com", "www.humansarefree.com", "www.infowars.com", "www.intellihub.com", "www.lewrockwell.com", "www.libertytalk.fm", "www.libertyvideos.org", "www.megynkelly.us", "www.naturalnews.com", "www.newswire-24.com", "www.nodisinfo.com", "www.nowtheendbegins.com", "www.pakalertpress.com", "www.politicalblindspot.com", "www.prisonplanet.com", "www.prisonplanet.tv", "www.realfarmacy.com", "www.redflagnews.com", "www.truthfrequencyradio.com", "www.thedailysheeple.com", "www.therundownlive.com", "www.unconfirmedsources.com", "www.veteranstoday.com", "www.wakingupwisconsin.com", "www.worldtruth.tv",
+		"www.thebeaverton.com", "www.americannews.com", "www.bigamericannews.com", "www.christwire.org", "www.civictribune.com", "www.clickhole.com", "www.creambmp.com", "www.dcgazette.com", "www.dailycurrant.com", "www.dcclothesline.com", "www.derfmagazine.com", "www.drudgereport.com.co", "www.duhprogressive.com", "www.empirenews.com", "www.enduringvision.com", "www.msnbc.co", "www.msnbc.website", "www.mediamass.net", "www.nationalreport.net", "www.newsbiscuit.com", "www.news-hound.com", "www.newsmutiny.com", "www.politicalears.com", "www.private-eye.co.uk", "www.realnewsrightnow.com", "www.rilenews.com", "www.sprotspickle.com", "www.thenewsnerd.com", "www.theuspatriot.com", "www.witscience.org", "www.theonion.com", "www.amplifyingglass.com", "www.duffleblog.com", "www.empiresports.co", "www.gomerblog.com", "www.huzlers.com", "www.itaglive.com", "www.newslo.com", "www.nahadaily.com", "www.rockcitytimes.com", "www.thelapine.ca", "www.thespoof.com", "www.weeklyworldnews.com", "www.worldnewsdailyreport.com", "www.21stcenturywire.com", "www.activistpost.com", "www.beforeitsnews.com", "www.bigpzone.com", "www.chronicle.su", "www.coasttocoastam.com", "www.consciouslifenews.com", "www.conservativeoutfitters.com", "www.countdowntozerotime.com", "www.counterpsyops.com", "www.dailybuzzlive.com", "www.disclose.tv", "www.fprnradio.com", "www.geoengineeringwatch.org", "www.globalresearch.ca", "www.govtslaves.info", "www.gulagbound.com", "www.jonesreport.com", "www.hangthebankers.com", "www.humansarefree.com", "www.infowars.com", "www.intellihub.com", "www.lewrockwell.com", "www.libertytalk.fm", "www.libertyvideos.org", "www.megynkelly.us", "www.naturalnews.com", "www.newswire-24.com", "www.nodisinfo.com", "www.nowtheendbegins.com", "www.pakalertpress.com", "www.politicalblindspot.com", "www.prisonplanet.com", "www.prisonplanet.tv", "www.realfarmacy.com", "www.redflagnews.com", "www.truthfrequencyradio.com", "www.thedailysheeple.com", "www.therundownlive.com", "www.unconfirmedsources.com", "www.veteranstoday.com", "www.wakingupwisconsin.com", "www.worldtruth.tv",
 	}
 
-	model        = []float64{-1.2737482873423125, 0.5142605867357818, 0.03370879411437541, 1.128443861590454, 1.1358368525010816, 0.35720347428853566, -1.1961518743190735, 0.2322227248512921, -0.4210460534911449, -0.03376353450943456, -1.3867871194847803, -0.8787988804117033, -0.8830888463820143, -0.6836304363488519, 0.2373738518714629, -0.6095781790421557, -1.5451400225785885, -1.3579258923320978, 0.08380092445168075, -0.3004120938915199, 1.0112704286991592, 1.610971235757192, -0.5639771214339668, 0.5832278847971472, 1.149164820993785, -1.0852161539572005, 0.9473528032342516, 0.2760889497210596, -0.34378759609904785, -1.2744406378919138, -1.3498792064156049, 0.221988954552692, -0.4693493678622002, -1.0411901706035622, -0.5776024532774324, -1.7042797044375582, -0.14961636750328172, -0.625535064861366, -0.7666057751699099, -0.21154871657483376, 0.046044142838342995, -0.37012732994482095, -0.7387381503691399, -0.1540698344108049, -0.7523041503763994, 0.25642665668049963, 0.10152643899105757, 0.2810367199385284, 1.456686148736361, -0.1313619368253374, -1.2845432190223274}
-	modelVec     *mat.Vector
-	linkCache    map[string]*mat.Vector
-	correctCache map[string]*OnlineVec
+	model = []float64{
+		-0.368792056532667, 0.5617918799819819, -0.8969301616906722, 0.615050743057359, 0.021108663784505582, 0.32901341450560834, -0.972283536803463, 0.21897015968450517, 0.5304807137037654, 0.0224418724399407, 0.9666131708689365, 0.5487397413234459, -0.2655609115069282, 0.16102965897440627, -0.2114920997975223, 0.036386778917172416, -0.16986404381406836, 0.29868152743115123, -0.7307668625289594, -0.3733521831709352, 0.6553497173019711, -0.4756550771767227, -0.6622093034239738, 0.5662172187635592, -1.1104679688139603, 1.379177950084947, 0.6484418125267746, -0.42206803769583395, -0.15065507228734834, 0.040955042175854, -0.08859817073559602, 0.16466860027422697, 0.7361759665144547, 0.903249887055352, 1.1338205580264482, 0.14668452719599281, 0.6142722670120557, 0.47725961287903346, 0.9699850721658022, -0.00583461748861685, 0.2858714288589395, -0.6228942481045906, -0.5051683821645134, 0.1701091805423817, 0.07643289649563592, 0.5287422999463888, 0.40564931450988123, -0.41551099331410557, -0.28746131294393173, 0.3942938233039454, -0.6986426039654011,
+	}
+	modelVec  *mat.Vector
+	linkCache map[string]*mat.Vector
 
 	sampleVectors []*OnlineVec
 )
@@ -69,6 +70,42 @@ func initWordBank() {
 		}
 		floatArray = append(floatArray, 0)
 		WordBank[words[0]] = mat.NewVector(51, floatArray)
+	}
+
+}
+
+func initSamples() {
+	sampleVectors = make([]*OnlineVec, 0)
+	f, err := os.Open("samples.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		words := strings.Split(line, " ")
+		floatArray := make([]float64, 0)
+		for _, val := range words[:51] {
+			floatVal, err := strconv.ParseFloat(val, 64)
+			if err != nil {
+				panic(err)
+			}
+			floatArray = append(floatArray, floatVal)
+		}
+
+		var fake bool
+		switch words[51] {
+		case "0":
+			fake = true
+		case "1":
+			fake = false
+		}
+
+		sampleVectors = append(sampleVectors, &OnlineVec{
+			Fake:   fake,
+			Vector: mat.NewVector(51, floatArray),
+		})
 	}
 
 }
@@ -161,7 +198,9 @@ func inferNews(url string) bool {
 	}
 
 	sig := predictVector(storyVec)
-	predict := sig > 0.5
+	predict := sig < 0.5
+
+	log.Println(sig)
 	return predict
 }
 
@@ -178,6 +217,7 @@ func predictVector(vec *mat.Vector) float64 {
 }
 
 func Infer(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	responseMap := make(map[string]interface{})
 	urlStr := r.FormValue("url")
 
@@ -185,12 +225,14 @@ func Infer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		responseMap["result"] = true
 		json.NewEncoder(w).Encode(responseMap)
+		return
 	}
 
 	for _, black := range blacklistSet {
 		if black == urlStruct.Host {
 			responseMap["result"] = true
 			json.NewEncoder(w).Encode(responseMap)
+			return
 		}
 	}
 
@@ -199,7 +241,6 @@ func Infer(w http.ResponseWriter, r *http.Request) {
 
 	responseMap["result"] = inference
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(responseMap)
 }
 
@@ -221,11 +262,13 @@ func Correct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	correctVector := &OnlineVec{
-		Vector:  linkCache[urlStr],
-		Correct: correct,
+		Vector: linkCache[urlStr],
+		Fake:   inferNews(urlStr),
 	}
 
-	correctCache[urlStr] = correctVector
+	if !correct {
+		correctVector.Fake = !correctVector.Fake
+	}
 
 	randomSamples := make([]*OnlineVec, 0)
 	for i := 1; i <= UPDATE_SAMPLE_SIZE; i++ {
@@ -238,7 +281,7 @@ func Correct(w http.ResponseWriter, r *http.Request) {
 	sampleVectors = append(sampleVectors, correctVector)
 
 	temp := make([]float64, 52)
-	alpha := 0.1
+	alpha := float64(0.5)
 	for idx, _ := range temp {
 		if idx == 51 {
 			break
@@ -250,7 +293,7 @@ func Correct(w http.ResponseWriter, r *http.Request) {
 		for _, sample := range randomSamples {
 			pred := predictVector(sample.Vector)
 			label := float64(0)
-			if sample.Correct {
+			if !sample.Fake {
 				label = 1
 			}
 
@@ -271,7 +314,7 @@ func Correct(w http.ResponseWriter, r *http.Request) {
 	for _, sample := range randomSamples {
 		pred := predictVector(sample.Vector)
 		label := float64(0)
-		if sample.Correct {
+		if !sample.Fake {
 			label = 1
 		}
 
@@ -298,6 +341,7 @@ func init() {
 	initTmpl()
 	initWordBank()
 	initModel()
+	initSamples()
 	linkCache = make(map[string]*mat.Vector)
 }
 

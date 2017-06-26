@@ -1,16 +1,23 @@
-console.log("yolo")
 $("#url").on("keyup", function(){
     var url = $("#url").val()
+
+    if(!url || url.length == 0){ 
+        return
+    }
+
     $("#result").attr("class", "alert alert-warning")
     $("#result").text("Thinking...")
     $.get("/infer", {"url": url}).done(function(data){
         var text;
         var cl;
-        if(!data.result){
-            text = "YES"
+        
+        console.log(data)
+        console.log(data.result)
+        if(data.result){
+            text = "It's fake."
             cl = "alert alert-danger"
         } else {
-            text = "NO"
+            text = "It's real."
             cl = "alert alert-success"
         }
         $("#result").attr("class", cl)
